@@ -1,0 +1,35 @@
+{
+  "version": 8,
+  "configurePresets": [
+    {
+      "name": "Debug",
+      "displayName": "Debug Build",
+      "description": "Debug Build with SDL3_static in Vulkan_SDL3",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+
+        "Vulkan_SDL3": "ON",
+        "SDL3_static": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Debug",
+      "description": "",
+      "displayName": "",
+      "configurePreset": "Debug",
+      "jobs": 0
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "Pack",
+      "description": "",
+      "displayName": "",
+      "configurePreset": "Debug"
+    }
+  ]
+}

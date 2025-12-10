@@ -7,7 +7,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(Vulkan_SDL3 "Using SDL3 provided by the Vulkan library" OFF)
-option(SDL3_static "Using SDL3 provided by the Vulkan library" OFF)
+option(SDL3_static "Link SDL3-static in the release build." OFF)
 
 find_package(Vulkan REQUIRED)
 
@@ -34,7 +34,11 @@ set(ImGUI
     "external/ImGUI/backends/imgui_impl_vulkan.cpp"
 )
 
-add_executable(AIManager WIN32 ${ImGUI} "src/main.cpp")
+add_executable(AIManager ${ImGUI} "src/main.cpp")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_property(TARGET AIManager PROPERTY WIN32_EXECUTABLE TRUE)
+endif()
 
 target_link_libraries(AIManager PRIVATE Vulkan::Vulkan)
 
@@ -46,3 +50,12 @@ if(WIN32 AND SDL3_static)
 else()
     target_link_libraries(AIManager PRIVATE SDL3::SDL3)
 endif()
+
+install(TARGETS AIManager DESTINATION installed)
+install(FILES $<TARGET_RUNTIME_DLLS:AIManager>
+        DESTINATION installed)
+
+set(CPACK_GENERATOR "TGZ")
+set(CACK_PACKAGE_NAME "AIManager")
+set(CPACK_PACKAGE_VERSION "0.0.0")
+include(CPack)
