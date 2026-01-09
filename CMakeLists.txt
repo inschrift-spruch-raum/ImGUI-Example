@@ -12,10 +12,11 @@ option(SDL3_static "Link SDL3-static in the release build." OFF)
 find_package(Vulkan REQUIRED)
 
 get_filename_component(Vulkan_Libs_DIR ${Vulkan_LIBRARIES} DIRECTORY)
+get_filename_component(Vulkan_DIR ${Vulkan_INCLUDE_DIR} DIRECTORY)
 get_filename_component(Vulkan_Bin_DIR ${Vulkan_GLSLC_EXECUTABLE} DIRECTORY)
 
 if(Vulkan_SDL3)
-    set(SDL3_DIR "${Vulkan_Libs_DIR}/cmake/SDL3")
+    set(SDL3_DIR "${Vulkan_DIR}/cmake")
 endif()
 
 find_package(SDL3 REQUIRED CONFIG)
