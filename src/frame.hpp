@@ -5,8 +5,11 @@
 
 static void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
 {
+    // Use a temporary semaphore index for acquiring - we'll use FrameIndex after acquiring
+    // This ensures we don't reuse a semaphore that's still in use by the swapchain
     Vulkan::Semaphore image_acquired_semaphore  = wd->FrameSemaphores[static_cast<std::int32_t>(wd->SemaphoreIndex)].ImageAcquiredSemaphore;
-    Vulkan::Semaphore render_complete_semaphore = wd->FrameSemaphores[static_cast<std::int32_t>(wd->SemaphoreIndex)].RenderCompleteSemaphore;
+
+    // Acquire next image with a temporary semaphore
     Vulkan::Result err = vkAcquireNextImageKHR(vk::Device(), wd->Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &wd->FrameIndex);
     if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR) {
         vk::SwapChainRebuild() = true;
@@ -18,7 +21,12 @@ static void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
         check_vk_result(err);
     }
 
+    // Now we have the FrameIndex, use FrameIndex-based semaphores for rendering
+    // Each swapchain image has its own dedicated semaphore set
     ImGui_ImplVulkanH_Frame* fd = &wd->Frames[static_cast<std::int32_t>(wd->FrameIndex)];
+    Vulkan::Semaphore render_complete_semaphore = wd->FrameSemaphores[static_cast<std::int32_t>(wd->FrameIndex)].RenderCompleteSemaphore;
+
+    // Wait for the fence to ensure the frame is not still in use
     {
         err = vkWaitForFences(vk::Device(), 1, &fd->Fence, VK_TRUE, UINT64_MAX);    // wait indefinitely instead of periodically checking
         check_vk_result(err);
@@ -76,7 +84,8 @@ static void FramePresent(ImGui_ImplVulkanH_Window* wd)
     if (vk::SwapChainRebuild()) {
         return;
     }
-    Vulkan::Semaphore render_complete_semaphore = wd->FrameSemaphores[static_cast<std::int32_t>(wd->SemaphoreIndex)].RenderCompleteSemaphore;
+    // Use FrameIndex-based semaphore for presentation
+    Vulkan::Semaphore render_complete_semaphore = wd->FrameSemaphores[static_cast<std::int32_t>(wd->FrameIndex)].RenderCompleteSemaphore;
     Vulkan::PresentInfoKHR info = {};
     info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     info.waitSemaphoreCount = 1;
@@ -94,5 +103,7 @@ static void FramePresent(ImGui_ImplVulkanH_Window* wd)
     if (err != VK_SUBOPTIMAL_KHR) {
         check_vk_result(err);
     }
+
+    // Move to the next semaphore index for the next acquire operation
     wd->SemaphoreIndex = (wd->SemaphoreIndex + 1) % wd->SemaphoreCount; // Now we can use the next set of semaphores
 }

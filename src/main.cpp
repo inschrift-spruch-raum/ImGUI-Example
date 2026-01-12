@@ -178,6 +178,7 @@ int main(int argc, char *argv[])
             ImGui_ImplVulkan_SetMinImageCount(vk::MinImageCount());
             ImGui_ImplVulkanH_CreateOrResizeWindow(vk::Instance(), vk::PhysicalDevice(), vk::Device(), wd, vk::QueueFamily(), vk::Allocator(), fb_width, fb_height, vk::MinImageCount(), 0);
             vk::MainWindowData().FrameIndex = 0;
+            vk::MainWindowData().SemaphoreIndex = 0;
             vk::SwapChainRebuild() = false;
         }
 
@@ -209,9 +210,9 @@ int main(int argc, char *argv[])
                 counter++;
             }
             ImGui::SameLine();
-            ImGui::Text(std::format("counter = %d", counter));
+            ImGui::Text(std::format("counter = {}", counter));
 
-            ImGui::Text(std::format("Application average %.3f ms/frame (%.1f FPS)", 1000.0F / io.Framerate, io.Framerate));
+            ImGui::Text(std::format("Application average {:.3f} ms/frame ({:.1f} FPS)", 1000.0F / io.Framerate, io.Framerate));
             ImGui::End();
         }
 

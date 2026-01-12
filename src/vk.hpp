@@ -59,7 +59,7 @@ public:
     static Vulkan::PipelineCache& PipelineCache() { return pipelineCache; }
     static Vulkan::DescriptorPool& DescriptorPool() { return descriptorPool; }
         static ImGui_ImplVulkanH_Window& MainWindowData() { 
-        static ImGui_ImplVulkanH_Window mainWindowData{};  // 延迟初始化
+        static ImGui_ImplVulkanH_Window mainWindowData{};  // Lazy initialization
         return mainWindowData; 
     }
     static std::uint32_t& MinImageCount() { return minImageCount; }

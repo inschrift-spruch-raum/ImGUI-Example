@@ -2,4 +2,6 @@ build/
 external/SDL3/
 .vs/
 out/
+
 CMakeUserPresets.json
+.claude/

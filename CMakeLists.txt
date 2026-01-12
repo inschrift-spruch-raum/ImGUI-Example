@@ -35,6 +35,8 @@ set(ImGUI
     "external/ImGUI/backends/imgui_impl_vulkan.cpp"
 )
 
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
+
 add_executable(AIManager ${ImGUI} "src/main.cpp")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -57,6 +59,6 @@ install(FILES $<TARGET_RUNTIME_DLLS:AIManager>
         DESTINATION installed)
 
 set(CPACK_GENERATOR "TGZ")
-set(CACK_PACKAGE_NAME "AIManager")
+set(CPACK_PACKAGE_NAME "AIManager")
 set(CPACK_PACKAGE_VERSION "0.0.0")
 include(CPack)
