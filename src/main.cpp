@@ -10,7 +10,7 @@
 
 #include "frame.hpp"
 #include "imgui_impl_sdl3.h"
-#include "vk.hpp"
+#include "VulkanContext.hpp"
 #include "wrapper/ImGUI_wrapper.hpp"
 #include "wrapper/Vulkan_wrapper.hpp"
 #include <cstdint>
@@ -49,11 +49,11 @@ int main(int argc, char *argv[])
             extensions.push_back(sdl_extensions[n]);
         }
     }
-    vk::SetupVulkan(extensions);
+    VulkanContext::SetupVulkan(extensions);
 
     // Create Window Surface
     Vulkan::SurfaceKHR surface = nullptr;
-    if (static_cast<int>(SDL_Vulkan_CreateSurface(window, vk::Instance(), vk::Allocator(), &surface)) == 0)
+    if (static_cast<int>(SDL_Vulkan_CreateSurface(window, VulkanContext::Instance(), VulkanContext::Allocator(), &surface)) == 0)
     {
         std::println("Failed to create Vulkan surface.");
         return 1;
@@ -63,8 +63,8 @@ int main(int argc, char *argv[])
     int w = 0;
     int h = 0;
     SDL_GetWindowSize(window, &w, &h);
-    ImGui_ImplVulkanH_Window* wd = &vk::MainWindowData();
-    vk::SetupVulkanWindow(wd, surface, w, h);
+    ImGui_ImplVulkanH_Window* wd = &VulkanContext::MainWindowData();
+    VulkanContext::SetupVulkanWindow(wd, surface, w, h);
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(window);
 
@@ -103,16 +103,16 @@ int main(int argc, char *argv[])
     ImGui_ImplSDL3_InitForVulkan(window);
     ImGui_ImplVulkan_InitInfo init_info = {};
     //init_info.ApiVersion = VK_API_VERSION_1_3;              // Pass in your value of VkApplicationInfo::apiVersion, otherwise will default to header version.
-    init_info.Instance = vk::Instance();
-    init_info.PhysicalDevice = vk::PhysicalDevice();
-    init_info.Device = vk::Device();
-    init_info.QueueFamily = vk::QueueFamily();
-    init_info.Queue = vk::Queue();
-    init_info.PipelineCache = vk::PipelineCache();
-    init_info.DescriptorPool = vk::DescriptorPool();
-    init_info.MinImageCount = vk::MinImageCount();
+    init_info.Instance = VulkanContext::Instance();
+    init_info.PhysicalDevice = VulkanContext::PhysicalDevice();
+    init_info.Device = VulkanContext::Device();
+    init_info.QueueFamily = VulkanContext::QueueFamily();
+    init_info.Queue = VulkanContext::Queue();
+    init_info.PipelineCache = VulkanContext::PipelineCache();
+    init_info.DescriptorPool = VulkanContext::DescriptorPool();
+    init_info.MinImageCount = VulkanContext::MinImageCount();
     init_info.ImageCount = wd->ImageCount;
-    init_info.Allocator = vk::Allocator();
+    init_info.Allocator = VulkanContext::Allocator();
     init_info.PipelineInfoMain.RenderPass = wd->RenderPass;
     init_info.PipelineInfoMain.Subpass = 0;
     init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
@@ -173,13 +173,13 @@ int main(int argc, char *argv[])
         int fb_width = 0;
         int fb_height = 0;
         SDL_GetWindowSize(window, &fb_width, &fb_height);
-        if (fb_width > 0 && fb_height > 0 && (vk::SwapChainRebuild() || vk::MainWindowData().Width != fb_width || vk::MainWindowData().Height != fb_height))
+        if (fb_width > 0 && fb_height > 0 && (VulkanContext::SwapChainRebuild() || VulkanContext::MainWindowData().Width != fb_width || VulkanContext::MainWindowData().Height != fb_height))
         {
-            ImGui_ImplVulkan_SetMinImageCount(vk::MinImageCount());
-            ImGui_ImplVulkanH_CreateOrResizeWindow(vk::Instance(), vk::PhysicalDevice(), vk::Device(), wd, vk::QueueFamily(), vk::Allocator(), fb_width, fb_height, vk::MinImageCount(), 0);
-            vk::MainWindowData().FrameIndex = 0;
-            vk::MainWindowData().SemaphoreIndex = 0;
-            vk::SwapChainRebuild() = false;
+            ImGui_ImplVulkan_SetMinImageCount(VulkanContext::MinImageCount());
+            ImGui_ImplVulkanH_CreateOrResizeWindow(VulkanContext::Instance(), VulkanContext::PhysicalDevice(), VulkanContext::Device(), wd, VulkanContext::QueueFamily(), VulkanContext::Allocator(), fb_width, fb_height, VulkanContext::MinImageCount(), 0);
+            VulkanContext::MainWindowData().FrameIndex = 0;
+            VulkanContext::MainWindowData().SemaphoreIndex = 0;
+            VulkanContext::SwapChainRebuild() = false;
         }
 
         // Start the Dear ImGui frame
@@ -254,14 +254,14 @@ int main(int argc, char *argv[])
 
     // Cleanup
     // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppQuit() function]
-    Vulkan::Result err = vkDeviceWaitIdle(vk::Device());
+    Vulkan::Result err = vkDeviceWaitIdle(VulkanContext::Device());
     check_vk_result(err);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 
-    vk::CleanupVulkanWindow();
-    vk::CleanupVulkan();
+    VulkanContext::CleanupVulkanWindow();
+    VulkanContext::CleanupVulkan();
 
     SDL_DestroyWindow(window);
     SDL_Quit();

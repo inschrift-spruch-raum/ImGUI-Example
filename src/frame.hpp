@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vk.hpp"
+#include "VulkanContext.hpp"
 #include <cstdint>
 
 static void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
@@ -10,9 +10,9 @@ static void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
     Vulkan::Semaphore image_acquired_semaphore  = wd->FrameSemaphores[static_cast<std::int32_t>(wd->SemaphoreIndex)].ImageAcquiredSemaphore;
 
     // Acquire next image with a temporary semaphore
-    Vulkan::Result err = vkAcquireNextImageKHR(vk::Device(), wd->Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &wd->FrameIndex);
+    Vulkan::Result err = vkAcquireNextImageKHR(VulkanContext::Device(), wd->Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &wd->FrameIndex);
     if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR) {
-        vk::SwapChainRebuild() = true;
+        VulkanContext::SwapChainRebuild() = true;
     }
     if (err == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
@@ -28,14 +28,14 @@ static void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
 
     // Wait for the fence to ensure the frame is not still in use
     {
-        err = vkWaitForFences(vk::Device(), 1, &fd->Fence, VK_TRUE, UINT64_MAX);    // wait indefinitely instead of periodically checking
+        err = vkWaitForFences(VulkanContext::Device(), 1, &fd->Fence, VK_TRUE, UINT64_MAX);    // wait indefinitely instead of periodically checking
         check_vk_result(err);
 
-        err = vkResetFences(vk::Device(), 1, &fd->Fence);
+        err = vkResetFences(VulkanContext::Device(), 1, &fd->Fence);
         check_vk_result(err);
     }
     {
-        err = vkResetCommandPool(vk::Device(), fd->CommandPool, 0);
+        err = vkResetCommandPool(VulkanContext::Device(), fd->CommandPool, 0);
         check_vk_result(err);
         Vulkan::CommandBufferBeginInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -74,14 +74,14 @@ static void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
 
         err = vkEndCommandBuffer(fd->CommandBuffer);
         check_vk_result(err);
-        err = vkQueueSubmit(vk::Queue(), 1, &info, fd->Fence);
+        err = vkQueueSubmit(VulkanContext::Queue(), 1, &info, fd->Fence);
         check_vk_result(err);
     }
 }
 
 static void FramePresent(ImGui_ImplVulkanH_Window* wd)
 {
-    if (vk::SwapChainRebuild()) {
+    if (VulkanContext::SwapChainRebuild()) {
         return;
     }
     // Use FrameIndex-based semaphore for presentation
@@ -93,9 +93,9 @@ static void FramePresent(ImGui_ImplVulkanH_Window* wd)
     info.swapchainCount = 1;
     info.pSwapchains = &wd->Swapchain;
     info.pImageIndices = &wd->FrameIndex;
-    Vulkan::Result err = vkQueuePresentKHR(vk::Queue(), &info);
+    Vulkan::Result err = vkQueuePresentKHR(VulkanContext::Queue(), &info);
     if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR) {
-        vk::SwapChainRebuild() = true;
+        VulkanContext::SwapChainRebuild() = true;
     }
     if (err == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
